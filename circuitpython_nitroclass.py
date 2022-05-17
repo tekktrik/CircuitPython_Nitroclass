@@ -26,42 +26,41 @@ Implementation Notes
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/tekktrik/CircuitPython_nitroclass.git"
 
-from os import fdatasync
 
+def nitroclass(*args, **kwargs):
 
-def nitroclass(cls):
-    def wrap_nitroclass(cls):
-        return cls
+    def wrapper_nitroclass(cls):
 
-    return wrap_nitroclass(cls)
+        def modifier_nitroclass(*args, **kwargs):
 
-sentinel = object()
+            # Add functionality based on arguments provided
 
-def add_wacky(*args, **kwargs):
+            # Add __init__
+            if kwargs.get("init", False):
 
-    def cls_add_wacky(cls):
-        print(cls)
-        print(cls)
+                def dunder_init(self, *args, **kwargs):
+                    for arg  # TODO: WIP
 
-        def wrap_add_wacky(*args, **kwargs):
+            # Add __repr__
+            if kwargs.get("repr", False):
 
-            def dunder_str(self):
-                if kwargs.get("yoink", False):
+                def dunder_repr(self):
                     return self.a.upper() + "... yoink?"
-                return self.a.upper()
 
-            cls.__str__ = dunder_str
+                cls.__repr__ = dunder_repr
+
+
             return cls
 
-        if len(args) != 0:
-            return wrap_add_wacky(cls)
-        return wrap_add_wacky(*args, **kwargs)
+        if len(args) == 0:
+            return modifier_nitroclass(*args, **kwargs)
+        return modifier_nitroclass(cls)
 
     if len(args) == 0:
-        return cls_add_wacky
-    return cls_add_wacky(args[0])
+        return wrapper_nitroclass
+    return wrapper_nitroclass(args[0])
 
-@add_wacky
+@
 class TestClass:
 
     def __init__(self, a):
