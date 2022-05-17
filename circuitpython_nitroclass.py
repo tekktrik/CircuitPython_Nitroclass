@@ -34,3 +34,39 @@ def nitroclass(cls):
         return cls
 
     return wrap_nitroclass(cls)
+
+sentinel = object()
+
+def add_wacky(*args, **kwargs):
+
+    def cls_add_wacky(cls):
+        print(cls)
+        print(cls)
+
+        def wrap_add_wacky(*args, **kwargs):
+
+            def dunder_str(self):
+                if kwargs.get("yoink", False):
+                    return self.a.upper() + "... yoink?"
+                return self.a.upper()
+
+            cls.__str__ = dunder_str
+            return cls
+
+        if len(args) != 0:
+            return wrap_add_wacky(cls)
+        return wrap_add_wacky(*args, **kwargs)
+
+    if len(args) == 0:
+        return cls_add_wacky
+    return cls_add_wacky(args[0])
+
+@add_wacky
+class TestClass:
+
+    def __init__(self, a):
+        self.a = a
+
+inst = TestClass("haha")
+print(str(inst))
+
