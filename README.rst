@@ -39,10 +39,6 @@ or individual libraries can be installed using
 
 Installing from PyPI
 =====================
-.. note:: This library is not available on PyPI yet. Install documentation is included
-   as a standard element. Stay tuned for PyPI availability!
-
-.. todo:: Remove the above note if PyPI version is/will be available at time of release.
 
 On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
 PyPI <https://pypi.org/project/circuitpython-nitroclass/>`_.
@@ -93,8 +89,25 @@ Or the following command to update an existing version:
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the
-examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+    from circuitpython_nitroclass import field, nitroclass
+
+    @nitroclass
+    class DataPacket:
+        req = field(type=int)
+        opt = "a"
+        dyn = field(default_factory=list)
+
+
+    x = DataPacket(req=1)
+    y = DataPacket(req=2)
+
+    assert x != y
+
+    x.req = 2
+
+    assert x == y
 
 Documentation
 =============

@@ -17,19 +17,13 @@ Implementation Notes
 
 **Hardware:**
 
-.. todo:: Add links to any specific hardware product page(s), or category page(s).
-  Use unordered list & hyperlink rST inline format: "* `Link Text <url>`_"
+None
 
 **Software and Dependencies:**
 
 * Adafruit CircuitPython firmware for the supported boards:
   https://circuitpython.org/downloads
 
-.. todo:: Uncomment or remove the Bus Device and/or the Register library dependencies
-  based on the library's use of either.
-
-# * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
-# * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 """
 
 # imports
@@ -40,8 +34,6 @@ __repo__ = "https://github.com/tekktrik/CircuitPython_Nitroclass.git"
 from collections import namedtuple
 
 from circuitpython_functools import total_ordering
-
-# from pprint import pprint  # TODO: Remove later
 
 
 class _MissingSentinel:
@@ -217,7 +209,7 @@ def nitroclass(
         field_map: dict[str, Field] = {}
         for arg in arg_names:
             val = getattr(c, arg)
-            if callable(val):  # Exclude callables, TODO: Check properties?
+            if callable(val):
                 continue
             if not isinstance(val, Field):
                 val = field(default=val)

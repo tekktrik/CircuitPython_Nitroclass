@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 Alec Delaney
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: Unlicense
 
 
 from circuitpython_nitroclass import field, nitroclass
