@@ -17,7 +17,7 @@ Introduction
     :alt: Build Status
 
 
-.. image:: https://codecov.io/gh/tekktrik/CircuitPython_Nitroclass/graph/badge.svg?token=ZPTV7SXHIO 
+.. image:: https://codecov.io/gh/tekktrik/CircuitPython_Nitroclass/graph/badge.svg?token=ZPTV7SXHIO
     :target: https://codecov.io/gh/tekktrik/CircuitPython_Nitroclass
     :alt: CodeCov Metrics
 

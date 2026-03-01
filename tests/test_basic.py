@@ -11,6 +11,9 @@ class DataPacket:
     opt = "a"
     dyn = field(default_factory=list)
 
+    def some_method(self) -> int:
+        return self.req**2
+
 
 def test_basic():
     x = DataPacket(req=1)

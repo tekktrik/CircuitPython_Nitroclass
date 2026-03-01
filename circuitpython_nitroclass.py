@@ -43,10 +43,11 @@ class _MissingSentinel:
 MISSING = _MissingSentinel()
 
 try:
-    from typing import Any, Callable, Self, Type, TypeAlias
+    from typing import Any, Callable, Self, Type, TypeAlias, TypeVar
 
     _Missing: TypeAlias = _MissingSentinel
-except ImportError:
+    C = TypeVar("C", bound=type)
+except ImportError:  # pragma: no cover
     pass
 
 
@@ -80,7 +81,7 @@ def field(  # noqa: PLR0913
     type: Type | _Missing = MISSING,  # TODO: Implement
     coerce: bool = False,  # TODO: Implement
     validation: Callable[[Self, Any], bool] | None = None,  # TODO: Implement
-):
+) -> Field:
 
     # compare==True, priority==0 >>> __eq__
     # compare==True, priority!=0 >>> __eq__, __gt__, __lt__
@@ -101,7 +102,7 @@ def field(  # noqa: PLR0913
     return Field(fld_default_factory, init, repr, hash, compare, priority, type, coerce, validation)
 
 
-def _attach_init(cls: Type, field_map: dict[str, Field]) -> None:
+def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
     args_with_defaults = {
         name: fld for name, fld in field_map.items() if fld.default_factory != MISSING
     }
@@ -117,7 +118,7 @@ def _attach_init(cls: Type, field_map: dict[str, Field]) -> None:
         # Check if args are missing
         provided_args = set(args.keys())
         if not required_args.issubset(provided_args):
-            raise RuntimeError(
+            raise TypeError(
                 "Some parameters missing"
             )  # TODO: Expand this error message, match CPython preferably
 
@@ -146,10 +147,10 @@ def _attach_init(cls: Type, field_map: dict[str, Field]) -> None:
     cls.__init__ = init_func
 
 
-def _attach_eq(cls: Type, field_map: dict[str, Field]) -> None:
+def _attach_eq(cls: C, field_map: dict[str, Field]) -> None:
     def eq_func(self, value):
         if not isinstance(value, cls):
-            return NotImplementedError(
+            raise NotImplementedError(
                 "Cannot compare these two classes"
             )  # TODO: Improve error message
         for name, field in field_map.items():
@@ -160,7 +161,7 @@ def _attach_eq(cls: Type, field_map: dict[str, Field]) -> None:
     cls.__eq__ = eq_func
 
 
-def _attach_comps(cls: Type, field_map: dict[str, Field]) -> None:
+def _attach_comps(cls: C, field_map: dict[str, Field]) -> None:
     compare_fields = [
         (name, field) for name, field in field_map.items() if field.compare and field.priority != 0
     ]  # Ignore priority 0
@@ -170,13 +171,11 @@ def _attach_comps(cls: Type, field_map: dict[str, Field]) -> None:
     expected_priorities = list(range(max(given_priorities) + 1))[1:]
 
     if given_priorities != expected_priorities:
-        raise ValueError(
-            "Priorities must be given as unique, discrete ints starting from 1 with no gaps"
-        )
+        raise ValueError("Priorities must be given as sequential ints starting from 1")
 
     def lt_func(self, value):
         if not isinstance(value, cls):
-            return NotImplementedError(
+            raise NotImplementedError(
                 "Cannot compare these two classes"
             )  # TODO: Improve error message
         for name, _ in compare_fields:
@@ -193,7 +192,7 @@ def _attach_comps(cls: Type, field_map: dict[str, Field]) -> None:
 
 
 def nitroclass(
-    cls: Type | None = None,
+    cls: C | None = None,
     *,
     init: bool = True,
     # repr: bool = True,
@@ -201,7 +200,7 @@ def nitroclass(
     order: bool = False,
     # unsafe_hash: bool = False,
     # frozen: bool = False,
-):  # noqa
+) -> C:  # noqa
     def class_wrapper(c):
         arg_names: set[str] = {arg for arg in c.__dict__ if not arg.startswith("__")}
 
