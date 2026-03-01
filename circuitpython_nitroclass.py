@@ -114,7 +114,7 @@ def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
     allowed_args = set(name for name, fld in field_map.items() if fld.init)
     required_args = set(args_without_defaults.keys())
 
-    def init_func(self, **args):
+    def init_func(self, **args) -> None:
         # Check if args are missing
         provided_args = set(args.keys())
         if not required_args.issubset(provided_args):
