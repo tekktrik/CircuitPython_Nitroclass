@@ -54,7 +54,6 @@ except ImportError:  # pragma: no cover
 Field = namedtuple(
     "Field",
     (
-        # "default",
         "default_factory",
         "init",
         "repr",
