@@ -202,7 +202,6 @@ def _attach_comps(cls: Type, field_map: dict[str, Field]) -> None:
 
 def nitroclass(
     cls: Type | None = None,
-    /,
     *,
     init: bool = True,
     # repr: bool = True,
