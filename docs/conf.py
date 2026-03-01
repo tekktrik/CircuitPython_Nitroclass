@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+"""Sphinx configuration file."""
+
 import datetime
 import os
 import sys
@@ -49,7 +51,9 @@ project = "CircuitPython Nitroclass Library"
 creation_year = "2026"
 current_year = str(datetime.datetime.now().year)
 year_duration = (
-    current_year if current_year == creation_year else creation_year + " - " + current_year
+    current_year
+    if current_year == creation_year
+    else creation_year + " - " + current_year
 )
 copyright = year_duration + " Alec Delaney"
 author = "Alec Delaney"

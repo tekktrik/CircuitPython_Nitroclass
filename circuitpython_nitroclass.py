@@ -3,12 +3,7 @@
 #
 # SPDX-License-Identifier: MIT
 # SPDX-License-Identifier: PSF-2.0
-"""
-`circuitpython_nitroclass`
-================================================================================
-
-Supercharge your CircuitPython classes similar to CPython dataclasses
-
+"""Supercharge your CircuitPython classes similar to CPython dataclasses.
 
 * Author(s): Alec Delaney
 
@@ -81,7 +76,7 @@ def field(  # noqa: PLR0913
     coerce: bool = False,  # TODO: Implement
     validation: Callable[[Self, Any], bool] | None = None,  # TODO: Implement
 ) -> Field:
-
+    """Implement a field for a nitro class."""
     # compare==True, priority==0 >>> __eq__
     # compare==True, priority!=0 >>> __eq__, __gt__, __lt__
     # compare==False, priority==0 >>> none
@@ -98,7 +93,17 @@ def field(  # noqa: PLR0913
     else:
         fld_default_factory = MISSING
 
-    return Field(fld_default_factory, init, repr, hash, compare, priority, type, coerce, validation)
+    return Field(
+        fld_default_factory,
+        init,
+        repr,
+        hash,
+        compare,
+        priority,
+        type,
+        coerce,
+        validation,
+    )
 
 
 def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
@@ -123,7 +128,9 @@ def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
 
         # Check that only allowed args were given
         if not provided_args.issubset(allowed_args):
-            raise TypeError("Got unexpected keyword argument")  # TODO: Expand error, match CPython?
+            raise TypeError(
+                "Got unexpected keyword argument"
+            )  # TODO: Expand error, match CPython?
 
         # Get args that still require values
         defaulting_args = optional_args.difference(
@@ -131,7 +138,9 @@ def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
         )  # TODO: Change to subtraction operator
 
         # Get the dict for provided values
-        provided_dict = {name: value for name, value in args.items() if name in provided_args}
+        provided_dict = {
+            name: value for name, value in args.items() if name in provided_args
+        }
 
         # Set provided values
         for name, value in provided_dict.items():
@@ -162,7 +171,9 @@ def _attach_eq(cls: C, field_map: dict[str, Field]) -> None:
 
 def _attach_comps(cls: C, field_map: dict[str, Field]) -> None:
     compare_fields = [
-        (name, field) for name, field in field_map.items() if field.compare and field.priority != 0
+        (name, field)
+        for name, field in field_map.items()
+        if field.compare and field.priority != 0
     ]  # Ignore priority 0
     compare_fields.sort(key=lambda x: x[1].priority)
 
@@ -200,6 +211,8 @@ def nitroclass(
     # unsafe_hash: bool = False,
     # frozen: bool = False,
 ) -> C:  # noqa
+    """Turn the decorated class into a nitro class."""
+
     def class_wrapper(c):
         arg_names: set[str] = {arg for arg in c.__dict__ if not arg.startswith("__")}
 

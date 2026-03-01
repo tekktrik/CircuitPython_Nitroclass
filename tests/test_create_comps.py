@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 Alec Delaney
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
+
+"""Tests comparison functionality."""
 
 import pytest
 
@@ -8,11 +10,14 @@ from circuitpython_nitroclass import field, nitroclass
 
 @nitroclass(order=True)
 class DataPacket:
+    """Test nitro class."""
+
     a = field(type=int, priority=2)
     b = field(type=int, priority=1, default=100)
 
 
 def test_comparisons():
+    """Tests basic comparison functionality."""
     x = DataPacket(a=1)
     y = DataPacket(a=1)
 
@@ -37,6 +42,8 @@ def test_comparisons():
 
 
 def test_different_types():
+    """Tests attempting comparison between nitro class and other types."""
+
     @nitroclass(order=True)
     class OtherPacket:
         a = field(type=int, priority=2)
@@ -44,11 +51,16 @@ def test_different_types():
 
     x = DataPacket(a=1)
     y = OtherPacket(a=1)
+
     with pytest.raises(NotImplementedError):
         x < y
 
+    with pytest.raises(NotImplementedError):
+        x < 0
+
 
 def test_nonsequential_priorities():
+    """Tests attempting to use nonsequential priorities."""
     # Not starting from 1
     with pytest.raises(ValueError):
 
