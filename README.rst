@@ -7,7 +7,6 @@ Introduction
     :alt: Documentation Status
 
 
-
 .. image:: https://img.shields.io/discord/327254708534116352.svg
     :target: https://adafru.it/discord
     :alt: Discord
@@ -18,9 +17,29 @@ Introduction
     :alt: Build Status
 
 
+.. image:: https://codecov.io/gh/tekktrik/CircuitPython_Nitroclass/graph/badge.svg?token=ZPTV7SXHIO 
+    :target: https://codecov.io/gh/tekktrik/CircuitPython_Nitroclass
+    :alt: CodeCov Metrics
+
+
 .. image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
     :target: https://github.com/astral-sh/ruff
     :alt: Code Style: Ruff
+
+
+.. image:: https://img.shields.io/badge/License-MIT-yellow.svg
+    :target: https://opensource.org/licenses/MIT
+    :alt: License: MIT
+
+
+.. image:: https://img.shields.io/badge/License-PSF_2.0-yellow.svg
+    :target: https://opensource.org/license/python-2-0
+    :alt: License: PSF-2.0
+
+
+.. image:: https://img.shields.io/badge/Maintained%3F-yes-green.svg
+    :target: https://github.com/tekktrik/CircuitPython_CSV
+    :alt: Maintained: Yes
 
 Supercharge your CircuitPython classes similar to CPython dataclasses
 
