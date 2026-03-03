@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 Alec Delaney
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 
 """Tests basic nitro class functionality."""
 
