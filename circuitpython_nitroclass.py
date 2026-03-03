@@ -118,7 +118,7 @@ def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
     allowed_args = set(name for name, fld in field_map.items() if fld.init)
     required_args = set(args_without_defaults.keys())
 
-    def init_func(self, **args) -> None:
+    def init_func(self, **args) -> None:  # TODO: Revert to str + exec building?
         # Check if args are missing
         provided_args = set(args.keys())
         if not required_args.issubset(provided_args):
@@ -153,6 +153,24 @@ def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
             setattr(self, name, value)
 
     cls.__init__ = init_func
+
+
+def _attach_repr(cls: C, field_map: dict[str, Field]) -> None:
+
+    def repr_func(self) -> str:
+        classname = cls.__qualname__.split(".")[-1]
+        repr_str = f"{classname}("
+        for name, field in field_map.items():
+            if not field.repr:
+                continue
+            value = repr(getattr(self, name))
+            repr_str += f"{name}={value}, "
+        if repr_str.endswith(", "):
+            repr_str = repr_str[:-2]
+        repr_str += ")"
+        return repr_str
+
+    cls.__repr__ = repr_func
 
 
 def _attach_eq(cls: C, field_map: dict[str, Field]) -> None:
@@ -205,7 +223,7 @@ def nitroclass(
     cls: C | None = None,
     *,
     init: bool = True,
-    # repr: bool = True,
+    repr: bool = True,
     eq: bool = True,
     order: bool = False,
     # unsafe_hash: bool = False,
@@ -228,6 +246,9 @@ def nitroclass(
 
         if init:
             _attach_init(c, field_map)
+
+        if repr:
+            _attach_repr(c, field_map)
 
         if order and not eq:
             raise ValueError  # TODO: Add message
