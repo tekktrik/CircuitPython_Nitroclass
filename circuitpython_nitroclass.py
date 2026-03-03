@@ -107,6 +107,7 @@ def field(  # noqa: PLR0913
 
 
 def _attach_init(cls: C, field_map: Dict[str, Field]) -> None:
+    """Attach __init__ method."""
     args_with_defaults = {
         name: fld for name, fld in field_map.items() if fld.default_factory != MISSING
     }
@@ -156,6 +157,7 @@ def _attach_init(cls: C, field_map: Dict[str, Field]) -> None:
 
 
 def _attach_repr(cls: C, field_map: Dict[str, Field]) -> None:
+    """Attach __repr__ method"""
 
     def repr_func(self) -> str:
         classname = cls.__qualname__.split(".")[-1]
@@ -174,6 +176,8 @@ def _attach_repr(cls: C, field_map: Dict[str, Field]) -> None:
 
 
 def _attach_eq(cls: C, field_map: Dict[str, Field]) -> None:
+    """Attach __eq__ method."""
+
     def eq_func(self, value):
         if not isinstance(value, cls):
             raise TypeError(
@@ -188,6 +192,7 @@ def _attach_eq(cls: C, field_map: Dict[str, Field]) -> None:
 
 
 def _attach_comps(cls: C, field_map: Dict[str, Field]) -> None:
+    """Attach comparison magic methods."""
     compare_fields = [
         (name, field)
         for name, field in field_map.items()
