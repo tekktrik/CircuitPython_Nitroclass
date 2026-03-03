@@ -158,7 +158,7 @@ def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
 def _attach_eq(cls: C, field_map: dict[str, Field]) -> None:
     def eq_func(self, value):
         if not isinstance(value, cls):
-            raise NotImplementedError(
+            raise TypeError(
                 "Cannot compare these two classes"
             )  # TODO: Improve error message
         for name, field in field_map.items():
@@ -185,7 +185,7 @@ def _attach_comps(cls: C, field_map: dict[str, Field]) -> None:
 
     def lt_func(self, value):
         if not isinstance(value, cls):
-            raise NotImplementedError(
+            raise TypeError(
                 "Cannot compare these two classes"
             )  # TODO: Improve error message
         for name, _ in compare_fields:

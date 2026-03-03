@@ -39,10 +39,10 @@ def test_different_types():
     x = DataPacket(a=1)
     y = OtherPacket(a=1)
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         x == y
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         x == 3  # noqa: PLR2004
 
 
