@@ -38,7 +38,7 @@ class _MissingSentinel:
 MISSING = _MissingSentinel()
 
 try:
-    from typing import Any, Callable, Self, Type, TypeAlias, TypeVar
+    from typing import Any, Callable, Dict, Self, Type, TypeAlias, TypeVar
 
     _Missing: TypeAlias = _MissingSentinel
     C = TypeVar("C", bound=type)
@@ -106,7 +106,7 @@ def field(  # noqa: PLR0913
     )
 
 
-def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
+def _attach_init(cls: C, field_map: Dict[str, Field]) -> None:
     args_with_defaults = {
         name: fld for name, fld in field_map.items() if fld.default_factory != MISSING
     }
@@ -155,7 +155,7 @@ def _attach_init(cls: C, field_map: dict[str, Field]) -> None:
     cls.__init__ = init_func
 
 
-def _attach_repr(cls: C, field_map: dict[str, Field]) -> None:
+def _attach_repr(cls: C, field_map: Dict[str, Field]) -> None:
 
     def repr_func(self) -> str:
         classname = cls.__qualname__.split(".")[-1]
@@ -173,7 +173,7 @@ def _attach_repr(cls: C, field_map: dict[str, Field]) -> None:
     cls.__repr__ = repr_func
 
 
-def _attach_eq(cls: C, field_map: dict[str, Field]) -> None:
+def _attach_eq(cls: C, field_map: Dict[str, Field]) -> None:
     def eq_func(self, value):
         if not isinstance(value, cls):
             raise TypeError(
@@ -187,7 +187,7 @@ def _attach_eq(cls: C, field_map: dict[str, Field]) -> None:
     cls.__eq__ = eq_func
 
 
-def _attach_comps(cls: C, field_map: dict[str, Field]) -> None:
+def _attach_comps(cls: C, field_map: Dict[str, Field]) -> None:
     compare_fields = [
         (name, field)
         for name, field in field_map.items()
@@ -235,7 +235,7 @@ def nitroclass(
         arg_names: set[str] = {arg for arg in c.__dict__ if not arg.startswith("__")}
 
         # Check if arg of type field
-        field_map: dict[str, Field] = {}
+        field_map: Dict[str, Field] = {}
         for arg in arg_names:
             val = getattr(c, arg)
             if callable(val):
