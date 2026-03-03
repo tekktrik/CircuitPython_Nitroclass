@@ -157,7 +157,7 @@ def _attach_init(cls: C, field_map: Dict[str, Field]) -> None:
 
 
 def _attach_repr(cls: C, field_map: Dict[str, Field]) -> None:
-    """Attach __repr__ method"""
+    """Attach __repr__ method."""
 
     def repr_func(self) -> str:
         classname = cls.__qualname__.split(".")[-1]
