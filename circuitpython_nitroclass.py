@@ -134,33 +134,26 @@ def _attach_init(cls: C, field_map: Dict[str, Field], frozen: bool) -> None:
         if frozen:
             provided_args = {HIDDEN_PREFIX + name for name in provided_args}
         if not required_args.issubset(provided_args):
-            raise TypeError(
-                "Some parameters missing"
-            )  # TODO: Expand this error message, match CPython preferably
+            missing_args = provided_args - required_args
+            raise TypeError(f"Missing parameters: {missing_args}")
 
         # Check that only allowed args were given
         if not provided_args.issubset(allowed_args):
-            raise TypeError(
-                "Got unexpected keyword argument"
-            )  # TODO: Expand error, match CPython?
+            unexpected_args = allowed_args - provided_args
+            raise TypeError(f"Got unexpected keyword arguments: {unexpected_args}")
 
         # Get args that still require values
-        defaulting_args = optional_args.difference(
-            provided_args
-        )  # TODO: Change to subtraction operator
+        defaulting_args = optional_args - provided_args
 
         # Get the dict for provided values
-        # provided_dict = {
-        #     name: value for name, value in args.items() if (name in provided_args and not frozen) or (HIDDEN_PREFIX + name in provided_args and frozen)
-        # }
         provided_dict = {}
         for name, value in args.items():
-            # full_name = HIDDEN_PREFIX + name if frozen else name
             provided_dict[name] = value
 
         # Set provided values
         for name, value in provided_dict.items():
             full_name = HIDDEN_PREFIX + name if frozen else name
+
             # Only validate provided args
             set_value = value
             field = field_map[full_name]
@@ -214,8 +207,8 @@ def _attach_eq(cls: C, field_map: Dict[str, Field]) -> None:
     def eq_func(self, value):
         if not isinstance(value, cls):
             raise TypeError(
-                "Cannot compare these two classes"
-            )  # TODO: Improve error message
+                f"Cannot compare these two classes: {self.__class__} and {value.__class__}"
+            )
         for name, field in field_map.items():
             if field.compare and getattr(self, name) != getattr(value, name):
                 return False
@@ -226,7 +219,14 @@ def _attach_eq(cls: C, field_map: Dict[str, Field]) -> None:
 
 def _attach_comps(cls: C, field_map: Dict[str, Field]) -> None:
     """Attach comparison magic methods."""
-    # TODO: Raise TypeError if __lt__ or other comparisons defined already
+    has_lt = cls.__dict__.get("__lt__", None)
+    has_gt = cls.__dict__.get("__gt__", None)
+    has_le = cls.__dict__.get("__le__", None)
+    has_ge = cls.__dict__.get("__ge__", None)
+
+    if has_lt or has_gt or has_le or has_ge:
+        raise TypeError("Comparison functions already defined.")
+
     compare_fields = [
         (name, field)
         for name, field in field_map.items()
@@ -243,8 +243,8 @@ def _attach_comps(cls: C, field_map: Dict[str, Field]) -> None:
     def lt_func(self, value):
         if not isinstance(value, cls):
             raise TypeError(
-                "Cannot compare these two classes"
-            )  # TODO: Improve error message
+                f"Cannot compare these two classes: {self.__class__} and {value.__class__}"
+            )
         for name, _ in compare_fields:
             self_value = getattr(self, name)
             other_value = getattr(value, name)
@@ -260,18 +260,29 @@ def _attach_comps(cls: C, field_map: Dict[str, Field]) -> None:
 
 def _make_immutable(cls: C, field_map: Dict[str, Field]) -> None:
     """Make the instance immutable."""
-    # TODO: Check for previously defined __setattr__() or __delattr__() => raise TypeError
+    has_setattr = cls.__dict__.get("__setattr__", None)
+    has_delattr = cls.__dict__.get("__delattr__", None)
+
+    if has_setattr or has_delattr:
+        raise TypeError("__setattr__ or __delattr__ already defined")
 
     for name in field_map:
         property_name = name[1:]
-        # def prop_getter(self):
-        #     return getattr(self, name)
-        prop = property(lambda x: getattr(x, name))
+
+        def prop_getter(self, name=name):
+            return getattr(self, name)
 
         def prop_setter(self, value):
             raise FrozenInstanceError("Cannot change frozen instances")
 
+        def prop_deleter(self):
+            raise FrozenInstanceError("Cannot delete from frozen instances")
+
+        prop = property(prop_getter, prop_setter, prop_deleter)
+
         prop = prop.setter(prop_setter)
+
+        print(f"Setting property {property_name} for field {name}")
         setattr(cls, property_name, prop)
 
 
@@ -351,7 +362,7 @@ def nitroclass(  # noqa: PLR0913
             _attach_repr(c, field_map)
 
         if order and not eq:
-            raise ValueError  # TODO: Add message
+            raise ValueError("Cannot have order=True and eq=False")
 
         if eq:
             _attach_eq(c, field_map)

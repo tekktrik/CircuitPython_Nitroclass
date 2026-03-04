@@ -96,3 +96,67 @@ def test_mismatched_compare_priority():
         @nitroclass(order=True)
         class OtherPacket:
             a = field(compare=False, priority=1)
+
+
+def test_lt_already_defined():
+    """Tests that error is raised if __lt__ is already defined."""
+    with pytest.raises(TypeError):
+
+        @nitroclass(order=True)
+        class DataPacket:
+            """Test nitro class."""
+
+            req1 = field(type=int)
+            req2 = field(default=5)
+            cls_var = "a"
+
+            def __lt__(self, other):
+                return True
+
+
+def test_gt_already_defined():
+    """Tests that error is raised if __gt__ is already defined."""
+    with pytest.raises(TypeError):
+
+        @nitroclass(order=True)
+        class DataPacket:
+            """Test nitro class."""
+
+            req1 = field(type=int)
+            req2 = field(default=5)
+            cls_var = "a"
+
+            def __gt__(self, other):
+                return True
+
+
+def test_le_already_defined():
+    """Tests that error is raised if __le__ is already defined."""
+    with pytest.raises(TypeError):
+
+        @nitroclass(order=True)
+        class DataPacket:
+            """Test nitro class."""
+
+            req1 = field(type=int)
+            req2 = field(default=5)
+            cls_var = "a"
+
+            def __le__(self, other):
+                return True
+
+
+def test_ge_already_defined():
+    """Tests that error is raised if __ge__ is already defined."""
+    with pytest.raises(TypeError):
+
+        @nitroclass(order=True)
+        class DataPacket:
+            """Test nitro class."""
+
+            req1 = field(type=int)
+            req2 = field(default=5)
+            cls_var = "a"
+
+            def __ge__(self, other):
+                return True
