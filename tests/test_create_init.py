@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 Alec Delaney
 # SPDX-License-Identifier: MIT
 
-"""Tests for the init functionality."""
+"""Tests for init functionality."""
 
 import pytest
 
@@ -13,8 +13,8 @@ class DataPacket:
     """Test nitro class."""
 
     req = field(type=int)
-    opt = "a"
     dyn = field(default_factory=list)
+    cls_var = "a"
 
 
 def test_missing_req_args():

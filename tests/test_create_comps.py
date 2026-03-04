@@ -87,3 +87,12 @@ def test_nonsequential_priorities():
             a = field(type=int, priority=1)
             b = field(type=int)
             c = field(type=int, priority=3)
+
+
+def test_mismatched_compare_priority():
+    """Tests that error is raised if compare == False and priority != 0."""
+    with pytest.raises(ValueError):
+
+        @nitroclass(order=True)
+        class OtherPacket:
+            a = field(compare=False, priority=1)

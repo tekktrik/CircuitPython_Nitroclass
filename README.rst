@@ -115,8 +115,8 @@ Usage Example
     @nitroclass
     class DataPacket:
         req = field(type=int)
-        opt = "a"
         dyn = field(default_factory=list)
+        cls_var = "a"
 
 
     x = DataPacket(req=1)

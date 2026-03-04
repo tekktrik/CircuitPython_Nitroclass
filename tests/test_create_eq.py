@@ -70,3 +70,18 @@ def test_eq_order_mismatch():
         class OtherPacket:
             a = field(type=int)
             b = 100
+
+
+def test_eq_exists():
+    """Tests if an explicit implementation of __eq__ already exists."""
+
+    @nitroclass
+    class OtherPacket:  # noqa: PLW1641
+        a = field(type=int)
+
+        def __eq__(self, value):
+            return False
+
+    x = OtherPacket(a=100)
+
+    assert x != x  # noqa: PLR0124

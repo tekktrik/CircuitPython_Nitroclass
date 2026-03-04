@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 Alec Delaney
 # SPDX-License-Identifier: MIT
 
-"""Tests basic nitro class functionality."""
+"""Tests for repr functionality."""
 
 from circuitpython_nitroclass import field, nitroclass
 
@@ -14,8 +14,8 @@ def test_repr():
         """Test nitro class."""
 
         req = field(type=int)
-        opt = "a"
         dyn = field(default_factory=list)
+        cls_var = "a"
 
     x = DataPacket(req=1)
     repr_str = f"y = {repr(x)}"
@@ -33,12 +33,11 @@ def test_not_in_repr():
     class DataPacket:
         """Test nitro class."""
 
-        req = field(default=1, repr=False)
-        opt = "a"
+        req = field(default="a")
         dyn = field(default_factory=list, repr=False)
 
     x = DataPacket()
-    assert repr(x) == "DataPacket(opt='a')"
+    assert repr(x) == "DataPacket(req='a')"
 
 
 def test_no_fields():

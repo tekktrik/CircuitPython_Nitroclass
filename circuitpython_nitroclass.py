@@ -36,6 +36,7 @@ class _MissingSentinel:
 
 
 MISSING = _MissingSentinel()
+HIDDEN_PREFIX = "_"
 
 try:
     from typing import Any, Callable, Dict, Self, Type, TypeAlias, TypeVar
@@ -44,6 +45,14 @@ try:
     C = TypeVar("C", bound=type)
 except ImportError:  # pragma: no cover
     pass
+
+
+class FrozenInstanceError(AttributeError):
+    """Exception raised when attempting to modify frozen instances."""
+
+
+class ValidationError(Exception):
+    """Exception raised when failing to validate or coerce a field."""
 
 
 Field = namedtuple(
@@ -67,14 +76,13 @@ def field(  # noqa: PLR0913
     default: Any = MISSING,
     default_factory: Callable[[], Any] | _Missing = MISSING,
     init: bool = True,
-    repr: bool = True,  # TODO: Implement
-    # hash: bool | None = None,  # TODO: Implement
-    hash: bool = False,  # TODO: Replace with above
+    repr: bool = True,
+    hash: bool | None = None,
     compare: bool = True,
-    priority: int = 0,  # TODO: Implement
-    type: Type | _Missing = MISSING,  # TODO: Implement
-    coerce: bool = False,  # TODO: Implement
-    validation: Callable[[Self, Any], bool] | None = None,  # TODO: Implement
+    priority: int = 0,
+    type: Type | _Missing = MISSING,
+    coerce: bool = False,
+    validation: Callable[[Self, Any], bool] | None = None,
 ) -> Field:
     """Implement a field for a nitro class."""
     # compare==True, priority==0 >>> __eq__
@@ -82,7 +90,6 @@ def field(  # noqa: PLR0913
     # compare==False, priority==0 >>> none
     # compare==False, priority!=0 >>> ERROR
 
-    # if default != MISSING and default_factory != MISSING:
     if MISSING not in {default, default_factory}:
         raise ValueError("cannot specify both default and default factory")
 
@@ -93,11 +100,13 @@ def field(  # noqa: PLR0913
     else:
         fld_default_factory = MISSING
 
+    create_hash = hash or (hash is None and compare)
+
     return Field(
         fld_default_factory,
         init,
         repr,
-        hash,
+        create_hash,
         compare,
         priority,
         type,
@@ -106,22 +115,24 @@ def field(  # noqa: PLR0913
     )
 
 
-def _attach_init(cls: C, field_map: Dict[str, Field]) -> None:
+def _attach_init(cls: C, field_map: Dict[str, Field], frozen: bool) -> None:
     """Attach __init__ method."""
-    args_with_defaults = {
+    optional_fields = {
         name: fld for name, fld in field_map.items() if fld.default_factory != MISSING
     }
-    args_without_defaults = {
+    required_fields = {
         name: fld for name, fld in field_map.items() if fld.default_factory == MISSING
     }
 
-    optional_args = set(args_with_defaults.keys())
+    optional_args = set(optional_fields.keys())
     allowed_args = set(name for name, fld in field_map.items() if fld.init)
-    required_args = set(args_without_defaults.keys())
+    required_args = set(required_fields.keys())
 
     def init_func(self, **args) -> None:  # TODO: Revert to str + exec building?
         # Check if args are missing
         provided_args = set(args.keys())
+        if frozen:
+            provided_args = {HIDDEN_PREFIX + name for name in provided_args}
         if not required_args.issubset(provided_args):
             raise TypeError(
                 "Some parameters missing"
@@ -139,19 +150,39 @@ def _attach_init(cls: C, field_map: Dict[str, Field]) -> None:
         )  # TODO: Change to subtraction operator
 
         # Get the dict for provided values
-        provided_dict = {
-            name: value for name, value in args.items() if name in provided_args
-        }
+        # provided_dict = {
+        #     name: value for name, value in args.items() if (name in provided_args and not frozen) or (HIDDEN_PREFIX + name in provided_args and frozen)
+        # }
+        provided_dict = {}
+        for name, value in args.items():
+            # full_name = HIDDEN_PREFIX + name if frozen else name
+            provided_dict[name] = value
 
         # Set provided values
         for name, value in provided_dict.items():
-            setattr(self, name, value)
+            full_name = HIDDEN_PREFIX + name if frozen else name
+            # Only validate provided args
+            set_value = value
+            field = field_map[full_name]
+            if field.type != MISSING and not isinstance(set_value, field.type):
+                if field.coerce:
+                    try:
+                        set_value = field.type(value)
+                    except ValueError as err:
+                        raise ValidationError(
+                            f"could not coerce field {name} to type {field.type}"
+                        ) from err
+                else:
+                    raise ValidationError(f"field {name} is not of type {field.type}")
+            if field.validation is not None and not field.validation(self, set_value):
+                raise ValidationError(f"could not validate field {name}")
+            setattr(self, full_name, set_value)
 
         # Set default values for remaining
-        for name in defaulting_args:
-            field = field_map[name]
+        for full_name in defaulting_args:
+            field = field_map[full_name]
             value = field.default_factory()
-            setattr(self, name, value)
+            setattr(self, full_name, value)
 
     cls.__init__ = init_func
 
@@ -177,6 +208,8 @@ def _attach_repr(cls: C, field_map: Dict[str, Field]) -> None:
 
 def _attach_eq(cls: C, field_map: Dict[str, Field]) -> None:
     """Attach __eq__ method."""
+    if cls.__dict__.get("__eq__", None):
+        return cls
 
     def eq_func(self, value):
         if not isinstance(value, cls):
@@ -193,6 +226,7 @@ def _attach_eq(cls: C, field_map: Dict[str, Field]) -> None:
 
 def _attach_comps(cls: C, field_map: Dict[str, Field]) -> None:
     """Attach comparison magic methods."""
+    # TODO: Raise TypeError if __lt__ or other comparisons defined already
     compare_fields = [
         (name, field)
         for name, field in field_map.items()
@@ -224,19 +258,61 @@ def _attach_comps(cls: C, field_map: Dict[str, Field]) -> None:
     cls = total_ordering(cls)
 
 
-def nitroclass(
+def _make_immutable(cls: C, field_map: Dict[str, Field]) -> None:
+    """Make the instance immutable."""
+    # TODO: Check for previously defined __setattr__() or __delattr__() => raise TypeError
+
+    for name in field_map:
+        property_name = name[1:]
+        # def prop_getter(self):
+        #     return getattr(self, name)
+        prop = property(lambda x: getattr(x, name))
+
+        def prop_setter(self, value):
+            raise FrozenInstanceError("Cannot change frozen instances")
+
+        prop = prop.setter(prop_setter)
+        setattr(cls, property_name, prop)
+
+
+def _attach_hash(cls: C, field_map: Dict[str, Field]) -> None:
+    """Attach __hash__ method."""
+    if cls.__dict__.get("__hash__", None):
+        return cls
+
+    iter_list = [(name, field) for name, field in field_map.items() if field.hash]
+    iter_list.sort(key=lambda x: x[0])
+
+    def hash_func(self):
+        attr_list = []
+        for name, _ in iter_list:
+            attr_list.append(getattr(self, name))
+        return hash(tuple(attr_list))
+
+    cls.__hash__ = hash_func
+
+
+def _make_unhashable(cls: C) -> None:
+
+    def unhashable_func(self):
+        raise TypeError(f"this class is not hashable")
+
+    cls.__hash__ = unhashable_func
+
+
+def nitroclass(  # noqa: PLR0913
     cls: C | None = None,
     *,
     init: bool = True,
     repr: bool = True,
     eq: bool = True,
     order: bool = False,
-    # unsafe_hash: bool = False,
-    # frozen: bool = False,
-) -> C:  # noqa
+    unsafe_hash: bool = False,
+    frozen: bool = False,
+) -> C:
     """Turn the decorated class into a nitro class."""
 
-    def class_wrapper(c):
+    def class_wrapper(c):  # noqa: PLR0912
         arg_names: set[str] = {arg for arg in c.__dict__ if not arg.startswith("__")}
 
         # Check if arg of type field
@@ -246,11 +322,30 @@ def nitroclass(
             if callable(val):
                 continue
             if not isinstance(val, Field):
-                val = field(default=val)
-            field_map[arg] = val
+                continue
+            full_arg = HIDDEN_PREFIX + arg if frozen else arg
+            field_map[full_arg] = val
+
+        mismatched = {
+            field
+            for field in field_map.values()
+            if field.type == MISSING and field.coerce
+        }
+        if mismatched:
+            raise ValueError("Cannot have fields with no types but coerce=True")
+
+        mismatched = {
+            field
+            for field in field_map.values()
+            if not field.compare and field.priority != 0
+        }
+        if mismatched:
+            raise ValueError(
+                "Cannot have fields with compare == False and priority != 0"
+            )
 
         if init:
-            _attach_init(c, field_map)
+            _attach_init(c, field_map, frozen)
 
         if repr:
             _attach_repr(c, field_map)
@@ -263,6 +358,14 @@ def nitroclass(
 
         if order:
             _attach_comps(c, field_map)
+
+        if frozen:
+            _make_immutable(c, field_map)
+
+        if (eq and frozen) or unsafe_hash:
+            _attach_hash(c, field_map)
+        elif eq:
+            _make_unhashable(c)  # Implementation raises TypeError
 
         return c
 
