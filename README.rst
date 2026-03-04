@@ -119,6 +119,8 @@ Usage Example
         cls_var = "a"
 
 
+    # NOTE: Due to CircuitPython implementation details, fields must be provided by keyword ONLY!
+
     x = DataPacket(req=1)
     y = DataPacket(req=2)
 
