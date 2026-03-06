@@ -45,6 +45,18 @@ jobs:
           mv simtests/${{ matrix.file }} CIRCUITPY/code.py
           cp circuitpython_nitroclass.py CIRCUITPY
       - name: Run simulator tests
+        id: simulator
         uses: tekktrik/simulate-circuitpython@main
         with:
           circuitpy: CIRCUITPY
+      - name: Check simulator result
+        run: |
+          RESULT="${{ steps.simulator.outputs.output-text }}"
+          if [[ "$RESULT" =~ [^[:space:]] ]]; then
+            echo "Tests failed!"
+            echo "Received the following output:"
+            echo "-----"
+            echo "$RESULT"
+          else
+            echo "Tests passed."
+          fi
