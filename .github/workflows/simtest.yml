@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: 2026 Alec Delaney
+# SPDX-License-Identifier: MIT
+
+name: Run native sim tests
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    paths:
+      - '.github/workflows/simtest.yml'
+      - 'circuitpython_nitroclass'
+      - 'tests/**'
+      - 'simtests/**'
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      testfiles: ${{ steps.set-files.outputs.file_list }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+      - name: Prepare test file matrix
+        id: set-files
+        run: |
+          FILES=$(ls simtests | jq -R . | jq -s -c .)
+          echo "file_list=$FILES" >> $GITHUB_OUTPUT
+  simtest:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{ fromJson(needs.setup.outputs.testfiles) }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+      - name: Make CIRCUITPY drive
+        run: |
+          mkdir CIRCUITPY
+          mv simtests/${{ matrix.file }} CIRCUITPY/code.py
+          cp circuitpython_nitroclass.py CIRCUITPY
+      - name: Run simulator tests
+        uses: tekktrik/simulate-circuitpython@main
+        with:
+          circuitpy: CIRCUITPY
