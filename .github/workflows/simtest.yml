@@ -50,7 +50,7 @@ jobs:
           mkdir CIRCUITPY/lib
           mv simtests/${{ matrix.file }} CIRCUITPY/code.py
           cp circuitpython_nitroclass.py CIRCUITPY
-          cp functools/circuitpython_functools CIRCUITPY/lib
+          cp functools/circuitpython_functools.py CIRCUITPY/lib
       - name: Run simulator tests
         id: simulator
         uses: tekktrik/simulate-circuitpython@main
