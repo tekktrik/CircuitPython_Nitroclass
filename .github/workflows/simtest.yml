@@ -57,6 +57,9 @@ jobs:
             echo "Received the following output:"
             echo "-----"
             echo "$RESULT"
+            exit 1
           else
             echo "Tests passed."
           fi
+
+# TODO: Failing test still passes
