@@ -39,11 +39,18 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v6
+      - name: Checkout CircuitPython_functools
+        uses: actions/checkout@v6
+        with:
+          repository: tekktrik/CircuitPython_functools
+          path: functools
       - name: Make CIRCUITPY drive
         run: |
           mkdir CIRCUITPY
+          mkdir CIRCUITPY/lib
           mv simtests/${{ matrix.file }} CIRCUITPY/code.py
           cp circuitpython_nitroclass.py CIRCUITPY
+          cp functools/circuitpython_functools CIRCUITPY/lib
       - name: Run simulator tests
         id: simulator
         uses: tekktrik/simulate-circuitpython@main
