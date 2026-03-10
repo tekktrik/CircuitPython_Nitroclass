@@ -45,6 +45,7 @@ except ValueError:
     raises_error = True
 assert raises_error
 
+
 # test_custom_init
 # Tests using a custom implementation of __init__().
 @nitroclass(init=False)
