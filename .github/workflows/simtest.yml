@@ -53,7 +53,7 @@ jobs:
           cp functools/circuitpython_functools.py CIRCUITPY/lib
       - name: Run simulator tests
         id: simulator
-        uses: tekktrik/simulate-circuitpython@main
+        uses: tekktrik/simulate-circuitpython-nativesim@v1
         with:
           circuitpy: CIRCUITPY
           version: 10.1.3
