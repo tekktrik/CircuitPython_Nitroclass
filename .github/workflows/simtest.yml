@@ -1,0 +1,73 @@
+# SPDX-FileCopyrightText: 2026 Alec Delaney
+# SPDX-License-Identifier: MIT
+
+name: Run native sim tests
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    paths:
+      - '.github/workflows/simtest.yml'
+      - 'circuitpython_nitroclass'
+      - 'tests/**'
+      - 'simtests/**'
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      testfiles: ${{ steps.set-files.outputs.file_list }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+      - name: Prepare test file matrix
+        id: set-files
+        run: |
+          FILES=$(ls simtests | jq -R . | jq -s -c .)
+          echo "file_list=$FILES" >> $GITHUB_OUTPUT
+  simtest:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        file: ${{ fromJson(needs.setup.outputs.testfiles) }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+      - name: Checkout CircuitPython_functools
+        uses: actions/checkout@v6
+        with:
+          repository: tekktrik/CircuitPython_functools
+          path: functools
+      - name: Make CIRCUITPY drive
+        run: |
+          mkdir CIRCUITPY
+          mkdir CIRCUITPY/lib
+          mv simtests/${{ matrix.file }} CIRCUITPY/code.py
+          cp circuitpython_nitroclass.py CIRCUITPY
+          cp functools/circuitpython_functools.py CIRCUITPY/lib
+      - name: Run simulator tests
+        id: simulator
+        uses: tekktrik/simulate-circuitpython@main
+        with:
+          circuitpy: CIRCUITPY
+          version: 10.1.3
+      - name: Check simulator result
+        run: |
+          RESULT="${{ steps.simulator.outputs.output-text }}"
+          if [[ "$RESULT" =~ [^[:space:]] ]]; then
+            echo "Tests failed!"
+            echo "Received the following output:"
+            echo "-----"
+            echo "$RESULT"
+            exit 1
+          else
+            echo "Tests passed."
+          fi
+
+# TODO: Failing test still passes

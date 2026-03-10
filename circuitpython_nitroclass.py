@@ -282,7 +282,6 @@ def _make_immutable(cls: C, field_map: Dict[str, Field]) -> None:
 
         prop = prop.setter(prop_setter)
 
-        print(f"Setting property {property_name} for field {name}")
         setattr(cls, property_name, prop)
 
 
