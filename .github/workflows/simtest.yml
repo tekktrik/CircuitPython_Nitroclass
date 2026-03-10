@@ -69,5 +69,3 @@ jobs:
           else
             echo "Tests passed."
           fi
-
-# TODO: Failing test still passes
