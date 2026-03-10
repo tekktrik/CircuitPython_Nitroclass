@@ -22,6 +22,7 @@ x = DataPacket(req=1)
 repr_str = f"y = {repr(x)}"
 
 locals = {"y": None, "DataPacket": DataPacket}
+exec(repr_str, {}, locals)
 
 assert x == locals["y"]
 
