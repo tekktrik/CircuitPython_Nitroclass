@@ -68,6 +68,8 @@ jobs:
         with:
           name: firmware.exe
           path: '.'
+      - name: Make firmware executable
+        run: chmod +x firmware.exe
       - name: Prepare CIRCUITPY
         uses: tekktrik/simulate-circuitpython-nativesim/prepare-circuitpy@v3
         with:
