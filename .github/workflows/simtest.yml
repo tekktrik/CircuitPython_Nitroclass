@@ -51,11 +51,17 @@ jobs:
           mv simtests/${{ matrix.file }} CIRCUITPY/code.py
           cp circuitpython_nitroclass.py CIRCUITPY
           cp functools/circuitpython_functools.py CIRCUITPY/lib
-      - name: Run simulator tests
-        id: simulator
-        uses: tekktrik/simulate-circuitpython-nativesim@v3
+      - name: Prepare system
+        uses: tekktrik/simulate-circuitpython-nativesim/prepare-system@v3
+      - name: Build firmware
+        uses: tekktrik/simulate-circuitpython-nativesim/build-firmware@v3
+      - name: Prepare flash
+        uses: tekktrik/simulate-circuitpython-nativesim/prepare-flash@v3
         with:
           circuitpy: CIRCUITPY
+      - name: Run Simulator
+        id: simulator
+        uses: tekktrik/simulate-circuitpython-nativesim/simulate@v3
       - name: Check simulator result
         run: |
           RESULT="${{ steps.simulator.outputs.output-text }}"
