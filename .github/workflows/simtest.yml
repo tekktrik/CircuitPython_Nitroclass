@@ -50,19 +50,6 @@ jobs:
         uses: tekktrik/simulate-circuitpython-nativesim/prepare-system@v3
       - name: Checkout the repository
         uses: actions/checkout@v6
-      # # TODO: Do this dynamically for dependencies
-      # - name: Checkout CircuitPython_functools
-      #   uses: actions/checkout@v6
-      #   with:
-      #     repository: tekktrik/CircuitPython_functools
-      #     path: functools
-      # - name: Make CIRCUITPY drive
-      #   run: |
-      #     mkdir CIRCUITPY
-      #     mkdir CIRCUITPY/lib
-      #     mv simtests/${{ matrix.file }} CIRCUITPY/code.py
-      #     cp circuitpython_nitroclass.py CIRCUITPY
-      #     cp functools/circuitpython_functools.py CIRCUITPY/lib
       - name: Download firmware artifact
         uses: actions/download-artifact@v8
         with:
