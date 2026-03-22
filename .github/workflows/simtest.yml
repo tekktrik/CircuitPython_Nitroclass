@@ -53,10 +53,9 @@ jobs:
           cp functools/circuitpython_functools.py CIRCUITPY/lib
       - name: Run simulator tests
         id: simulator
-        uses: tekktrik/simulate-circuitpython-nativesim@v1
+        uses: tekktrik/simulate-circuitpython-nativesim@v3
         with:
           circuitpy: CIRCUITPY
-          version: 10.1.3
       - name: Check simulator result
         run: |
           RESULT="${{ steps.simulator.outputs.output-text }}"
