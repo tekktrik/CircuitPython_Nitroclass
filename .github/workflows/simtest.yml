@@ -23,6 +23,8 @@ jobs:
     outputs:
       testfiles: ${{ steps.set-files.outputs.file_list }}
     steps:
+      - name: Prepare system
+        uses: tekktrik/simulate-circuitpython-nativesim/prepare-system@v3
       - name: Checkout the repository
         uses: actions/checkout@v6
       - name: Prepare test file matrix
@@ -30,6 +32,13 @@ jobs:
         run: |
           FILES=$(ls simtests | jq -R . | jq -s -c .)
           echo "file_list=$FILES" >> $GITHUB_OUTPUT
+      - name: Build firmware
+        uses: tekktrik/simulate-circuitpython-nativesim/build-firmware@v3
+      - name: Upload firmware as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: firmware.exe
+          path: ./firmware.exe
   simtest:
     needs: setup
     runs-on: ubuntu-latest
@@ -37,24 +46,37 @@ jobs:
       matrix:
         file: ${{ fromJson(needs.setup.outputs.testfiles) }}
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v6
-      - name: Checkout CircuitPython_functools
-        uses: actions/checkout@v6
-        with:
-          repository: tekktrik/CircuitPython_functools
-          path: functools
-      - name: Make CIRCUITPY drive
-        run: |
-          mkdir CIRCUITPY
-          mkdir CIRCUITPY/lib
-          mv simtests/${{ matrix.file }} CIRCUITPY/code.py
-          cp circuitpython_nitroclass.py CIRCUITPY
-          cp functools/circuitpython_functools.py CIRCUITPY/lib
       - name: Prepare system
         uses: tekktrik/simulate-circuitpython-nativesim/prepare-system@v3
-      - name: Build firmware
-        uses: tekktrik/simulate-circuitpython-nativesim/build-firmware@v3
+      - name: Checkout the repository
+        uses: actions/checkout@v6
+      # # TODO: Do this dynamically for dependencies
+      # - name: Checkout CircuitPython_functools
+      #   uses: actions/checkout@v6
+      #   with:
+      #     repository: tekktrik/CircuitPython_functools
+      #     path: functools
+      # - name: Make CIRCUITPY drive
+      #   run: |
+      #     mkdir CIRCUITPY
+      #     mkdir CIRCUITPY/lib
+      #     mv simtests/${{ matrix.file }} CIRCUITPY/code.py
+      #     cp circuitpython_nitroclass.py CIRCUITPY
+      #     cp functools/circuitpython_functools.py CIRCUITPY/lib
+      - name: Download firmware artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: firmware.exe
+          path: '.'
+      - name: Prepare CIRCUITPY
+        uses: tekktrik/simulate-circuitpython-nativesim/prepare-circuitpy@v3
+        with:
+          code-py: simtests/${{ matrix.file }}
+          dependencies-file: requirements.txt
+          version: latest
+          circuitpy: CIRCUITPY
+      - name: Add this library to CIRCUITPY
+        run: cp circuitpython_nitroclass.py CIRCUITPY
       - name: Prepare flash
         uses: tekktrik/simulate-circuitpython-nativesim/prepare-flash@v3
         with:
